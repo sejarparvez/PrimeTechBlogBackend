@@ -1,9 +1,8 @@
 import * as admin from "firebase-admin";
-
-const serviceAccount = require("./ServiceAccountKey.json");
+import serviceAccount from "./ServiceAccountKey.json";
 
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+  credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
   storageBucket: "primetech-e8527.appspot.com",
 });
 
@@ -17,6 +16,6 @@ const storage: FirebaseStorage = admin.storage();
 const bucket = storage.bucket("my-bucket");
 const newName = "new-file-name";
 const file = bucket.file(newName);
-export default bucket
+export default bucket;
 
 // Do something with the file object

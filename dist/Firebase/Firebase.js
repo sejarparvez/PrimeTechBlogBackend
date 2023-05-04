@@ -22,11 +22,14 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 var admin = __importStar(require("firebase-admin"));
-var serviceAccount = require("./ServiceAccountKey.json");
+var ServiceAccountKey_json_1 = __importDefault(require("./ServiceAccountKey.json"));
 admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
+    credential: admin.credential.cert(ServiceAccountKey_json_1.default),
     storageBucket: "primetech-e8527.appspot.com",
 });
 // Create a variable with the correct type
