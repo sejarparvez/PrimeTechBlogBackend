@@ -78,7 +78,7 @@ Login.post("/login", function (req, res) { return __awaiter(void 0, void 0, void
                     });
                 }
                 else {
-                    res.status(400).json("Wrong Email Password");
+                    res.status(400).json("Wrong Email Or Password");
                 }
                 return [2 /*return*/];
         }

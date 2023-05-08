@@ -39,7 +39,7 @@ Login.post("/login", async (req, res) => {
       }
     );
   } else {
-    res.status(400).json("Wrong Email Password");
+    res.status(400).json("Wrong Email Or Password");
   }
 });
 

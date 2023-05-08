@@ -62,6 +62,8 @@ var corsOptions = {
 app.use((0, cors_1.default)(corsOptions));
 // Use cookie-parser middleware
 app.use((0, cookie_parser_1.default)());
+// Use express.json middleware
+app.use(express_1.default.json());
 // DATABASE CONNECTION
 function connectToDatabase() {
     return __awaiter(this, void 0, void 0, function () {

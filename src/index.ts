@@ -26,6 +26,9 @@ app.use(cors(corsOptions));
 // Use cookie-parser middleware
 app.use(cookieParser());
 
+// Use express.json middleware
+app.use(express.json());
+
 // DATABASE CONNECTION
 async function connectToDatabase() {
   try {
