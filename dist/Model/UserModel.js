@@ -13,11 +13,13 @@ var UserSchema = new mongoose_1.Schema({
                 var emailRegex = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/;
                 return emailRegex.test(email);
             },
-            message: function (props) { return "".concat(props.value, " is not a valid email address"); },
+            message: function (props) {
+                return "".concat(props.value, " is not a valid email address");
+            },
         },
     },
     Image: { type: String },
-    Bio: { type: String, maxlength: 200 },
+    Bio: { type: String, maxlength: 5000 },
     Password: { type: String, minlength: 6 },
     socialLinks: {
         facebook: { type: String },
@@ -29,5 +31,5 @@ var UserSchema = new mongoose_1.Schema({
         website: { type: String },
     },
 });
-var UserModel = (0, mongoose_1.model)('User', UserSchema);
+var UserModel = (0, mongoose_1.model)("User", UserSchema);
 exports.default = UserModel;

@@ -2,7 +2,7 @@ import express, { Request, Response, Router } from "express";
 import fs from "fs";
 import jwt from "jsonwebtoken";
 import multer from "multer";
-import bucket from "../Firebase/Firebase";
+import { bucket } from "../Firebase/Firebase";
 import Post from "../Model/PostModel";
 
 const SinglePost: Router = express.Router();
@@ -21,7 +21,7 @@ SinglePost.post(
 
     // upload file to Firebase Storage
 
-    const file = bucket.file(newName);
+    const file = bucket.file(`post/${newName}`);
     const writeStream = file.createWriteStream({
       metadata: { contentType: req.file!.mimetype },
     });
@@ -50,49 +50,12 @@ SinglePost.post(
           summary,
           categories,
           content,
-          cover: `https://storage.googleapis.com/${bucket.name}/${newName}`,
+          cover: `https://storage.googleapis.com/${bucket.name}/post/${newName}`,
           author: info.id,
         });
         res.json(PostData);
       }
     );
-  }
-);
-
-// ROUTER FOR UPLOADING POST IMAGE
-
-SinglePost.post(
-  "/postimage",
-  upload.single("file"),
-  async (req: Request, res: Response) => {
-    try {
-      // upload file to Firebase Storage
-
-      const { originalname, path } = req.file!;
-      const parts = originalname.split(".");
-      const ext = parts[parts.length - 1];
-      const newName = `${Date.now()}.${ext}`;
-
-      const file = bucket.file(newName);
-      const writeStream = file.createWriteStream({
-        metadata: { contentType: req.file!.mimetype },
-      });
-      fs.createReadStream(path).pipe(writeStream);
-      await new Promise<void>((resolve, reject) => {
-        writeStream.on("error", reject);
-        writeStream.on("finish", resolve);
-      });
-      await file.makePublic();
-
-      // delete temporary file from local storage
-      fs.unlinkSync(path);
-
-      const publicUrl = `https://storage.googleapis.com/${bucket.name}/${newName}`;
-      res.send(publicUrl);
-    } catch (error) {
-      console.error(error);
-      res.status(500).send("Error uploading image");
-    }
   }
 );
 
@@ -125,7 +88,7 @@ SinglePost.put("/post", upload.single("file"), async (req, res) => {
     let coverUrl = post.cover;
     if (newPath) {
       const fileName = `${Date.now()}.${(newPath as string).split(".").pop()}`;
-      const file = bucket.file(fileName);
+      const file = bucket.file(`post/${fileName}`);
       const writeStream = file.createWriteStream({
         metadata: { contentType: req.file?.mimetype },
       });
@@ -135,7 +98,7 @@ SinglePost.put("/post", upload.single("file"), async (req, res) => {
         writeStream.on("finish", resolve);
       });
       await file.makePublic();
-      coverUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+      coverUrl = `https://storage.googleapis.com/${bucket.name}/post/${fileName}`;
 
       // delete temporary file from local storage
       fs.unlinkSync(newPath);
@@ -143,12 +106,12 @@ SinglePost.put("/post", upload.single("file"), async (req, res) => {
       // delete previous cover image from Firebase Storage
       if (post.cover) {
         const oldFileName = post.cover.split("/").pop();
-        const oldFile = bucket.file(oldFileName);
+        const oldFile = bucket.file(`post/${oldFileName}`);
         await oldFile.delete();
       }
     }
 
-    await post.update({
+    await post.updateOne({
       title,
       summary,
       categories,
@@ -172,7 +135,7 @@ SinglePost.delete("/post/:id", async (req, res) => {
 
     // Delete the image from Firebase Storage
     const fileName = post.cover.split("/").pop(); // get the file name from the image URL
-    const file = bucket.file(fileName);
+    const file = bucket.file(`post/${fileName}`);
     await file.delete();
 
     // Delete the post from the database

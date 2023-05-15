@@ -43,7 +43,7 @@ var express_1 = __importDefault(require("express"));
 var fs_1 = __importDefault(require("fs"));
 var jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 var multer_1 = __importDefault(require("multer"));
-var Firebase_1 = __importDefault(require("../Firebase/Firebase"));
+var Firebase_1 = require("../Firebase/Firebase");
 var PostModel_1 = __importDefault(require("../Model/PostModel"));
 var SinglePost = express_1.default.Router();
 var upload = (0, multer_1.default)({ dest: "uploads/" });
@@ -57,7 +57,7 @@ SinglePost.post("/newpost", upload.single("file"), function (req, res) { return 
                 parts = originalname.split(".");
                 ext = parts[parts.length - 1];
                 newName = "".concat(Date.now(), ".").concat(ext);
-                file = Firebase_1.default.file(newName);
+                file = Firebase_1.bucket.file("post/".concat(newName));
                 writeStream = file.createWriteStream({
                     metadata: { contentType: req.file.mimetype },
                 });
@@ -87,7 +87,7 @@ SinglePost.post("/newpost", upload.single("file"), function (req, res) { return 
                                         summary: summary,
                                         categories: categories,
                                         content: content,
-                                        cover: "https://storage.googleapis.com/".concat(Firebase_1.default.name, "/").concat(newName),
+                                        cover: "https://storage.googleapis.com/".concat(Firebase_1.bucket.name, "/post/").concat(newName),
                                         author: info.id,
                                     })];
                             case 1:
@@ -98,45 +98,6 @@ SinglePost.post("/newpost", upload.single("file"), function (req, res) { return 
                     });
                 }); });
                 return [2 /*return*/];
-        }
-    });
-}); });
-// ROUTER FOR UPLOADING POST IMAGE
-SinglePost.post("/postimage", upload.single("file"), function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, originalname, path, parts, ext, newName, file, writeStream_1, publicUrl, error_1;
-    return __generator(this, function (_b) {
-        switch (_b.label) {
-            case 0:
-                _b.trys.push([0, 3, , 4]);
-                _a = req.file, originalname = _a.originalname, path = _a.path;
-                parts = originalname.split(".");
-                ext = parts[parts.length - 1];
-                newName = "".concat(Date.now(), ".").concat(ext);
-                file = Firebase_1.default.file(newName);
-                writeStream_1 = file.createWriteStream({
-                    metadata: { contentType: req.file.mimetype },
-                });
-                fs_1.default.createReadStream(path).pipe(writeStream_1);
-                return [4 /*yield*/, new Promise(function (resolve, reject) {
-                        writeStream_1.on("error", reject);
-                        writeStream_1.on("finish", resolve);
-                    })];
-            case 1:
-                _b.sent();
-                return [4 /*yield*/, file.makePublic()];
-            case 2:
-                _b.sent();
-                // delete temporary file from local storage
-                fs_1.default.unlinkSync(path);
-                publicUrl = "https://storage.googleapis.com/".concat(Firebase_1.default.name, "/").concat(newName);
-                res.send(publicUrl);
-                return [3 /*break*/, 4];
-            case 3:
-                error_1 = _b.sent();
-                console.error(error_1);
-                res.status(500).send("Error uploading image");
-                return [3 /*break*/, 4];
-            case 4: return [2 /*return*/];
         }
     });
 }); });
@@ -154,7 +115,7 @@ SinglePost.put("/post", upload.single("file"), function (req, res) { return __aw
         }
         token = req.cookies.token;
         jsonwebtoken_1.default.verify(token, process.env.SECRET, {}, function (error, info) { return __awaiter(void 0, void 0, void 0, function () {
-            var _a, id, title, summary, content, categories, post, isAuthor, coverUrl, fileName, file, writeStream_2, oldFileName, oldFile;
+            var _a, id, title, summary, content, categories, post, isAuthor, coverUrl, fileName, file, writeStream_1, oldFileName, oldFile;
             var _b;
             return __generator(this, function (_c) {
                 switch (_c.label) {
@@ -172,31 +133,31 @@ SinglePost.put("/post", upload.single("file"), function (req, res) { return __aw
                         coverUrl = post.cover;
                         if (!newPath) return [3 /*break*/, 5];
                         fileName = "".concat(Date.now(), ".").concat(newPath.split(".").pop());
-                        file = Firebase_1.default.file(fileName);
-                        writeStream_2 = file.createWriteStream({
+                        file = Firebase_1.bucket.file("post/".concat(fileName));
+                        writeStream_1 = file.createWriteStream({
                             metadata: { contentType: (_b = req.file) === null || _b === void 0 ? void 0 : _b.mimetype },
                         });
-                        fs_1.default.createReadStream(newPath).pipe(writeStream_2);
+                        fs_1.default.createReadStream(newPath).pipe(writeStream_1);
                         return [4 /*yield*/, new Promise(function (resolve, reject) {
-                                writeStream_2.on("error", reject);
-                                writeStream_2.on("finish", resolve);
+                                writeStream_1.on("error", reject);
+                                writeStream_1.on("finish", resolve);
                             })];
                     case 2:
                         _c.sent();
                         return [4 /*yield*/, file.makePublic()];
                     case 3:
                         _c.sent();
-                        coverUrl = "https://storage.googleapis.com/".concat(Firebase_1.default.name, "/").concat(fileName);
+                        coverUrl = "https://storage.googleapis.com/".concat(Firebase_1.bucket.name, "/post/").concat(fileName);
                         // delete temporary file from local storage
                         fs_1.default.unlinkSync(newPath);
                         if (!post.cover) return [3 /*break*/, 5];
                         oldFileName = post.cover.split("/").pop();
-                        oldFile = Firebase_1.default.file(oldFileName);
+                        oldFile = Firebase_1.bucket.file("post/".concat(oldFileName));
                         return [4 /*yield*/, oldFile.delete()];
                     case 4:
                         _c.sent();
                         _c.label = 5;
-                    case 5: return [4 /*yield*/, post.update({
+                    case 5: return [4 /*yield*/, post.updateOne({
                             title: title,
                             summary: summary,
                             categories: categories,
@@ -228,7 +189,7 @@ SinglePost.delete("/post/:id", function (req, res) { return __awaiter(void 0, vo
                     return [2 /*return*/, res.status(404).json({ error: "Post not found" })];
                 }
                 fileName = post.cover.split("/").pop();
-                file = Firebase_1.default.file(fileName);
+                file = Firebase_1.bucket.file("post/".concat(fileName));
                 return [4 /*yield*/, file.delete()];
             case 2:
                 _a.sent();

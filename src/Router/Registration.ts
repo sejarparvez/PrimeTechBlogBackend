@@ -4,17 +4,15 @@ import express from "express";
 import fs from "fs";
 import jwt from "jsonwebtoken";
 import multer from "multer";
-import bucket from "../Firebase/Firebase";
+import { bucket } from "../Firebase/Firebase";
 import User from "../Model/UserModel";
 dotenv.config();
-
-const Secret = process.env.SECRET || "";
 
 const upload = multer({ dest: "uploads/" });
 const Registration = express.Router();
 const salt = bcrypt.genSalt(10);
 const defaultImageUrl =
-  "https://firebasestorage.googleapis.com/v0/b/primetech-e8527.appspot.com/o/Deafult%2FUser-Profile-PNG.png?alt=media&token=ecae5a27-2319-473a-bb3e-d4ddb25b4b39";
+  "https://firebasestorage.googleapis.com/v0/b/primetech-e8527.appspot.com/o/Deafult%2Fprofile.png?alt=media&token=01ef3106-a0d2-4443-9371-71ec40e241dd";
 
 Registration.post("/registration", async (req, res) => {
   const { Name, Email, Bio, Password } = req.body;
@@ -78,8 +76,8 @@ Registration.put(
     const { token } = req.cookies;
 
     jwt.verify(
-      token,
-      Secret,
+      token!,
+      process.env.SECRET!,
       async (
         err: jwt.VerifyErrors | null,
         decoded: string | jwt.JwtPayload | undefined
@@ -91,7 +89,7 @@ Registration.put(
 
         const decodedToken =
           typeof decoded === "string" ? JSON.parse(decoded) : decoded;
-        const info = decodedToken.user;
+        const info = decodedToken.id;
 
         try {
           const user = await User.findById(userId);
@@ -99,7 +97,7 @@ Registration.put(
             return res.status(404).json({ message: "User not found" });
           }
 
-          const isAuthor = JSON.stringify(user._id) === JSON.stringify(info.id);
+          const isAuthor = JSON.stringify(user._id) === JSON.stringify(info);
 
           if (!isAuthor) {
             return res.status(400).json("You are not the author of this post");
@@ -110,7 +108,11 @@ Registration.put(
             const previousImageFile = bucket.file(
               `profile/${previousImageName}`
             );
-            await previousImageFile.delete();
+
+            const exists = await previousImageFile.exists();
+            if (exists) {
+              await previousImageFile.delete();
+            }
           }
 
           // update user data
@@ -125,6 +127,7 @@ Registration.put(
           res.json(updatedUser);
         } catch (error) {
           console.log(error);
+          console.log(decodedToken);
           res.status(400).json(error);
         }
       }

@@ -45,14 +45,13 @@ var express_1 = __importDefault(require("express"));
 var fs_1 = __importDefault(require("fs"));
 var jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 var multer_1 = __importDefault(require("multer"));
-var Firebase_1 = __importDefault(require("../Firebase/Firebase"));
+var Firebase_1 = require("../Firebase/Firebase");
 var UserModel_1 = __importDefault(require("../Model/UserModel"));
 dotenv_1.default.config();
-var Secret = process.env.SECRET || "";
 var upload = (0, multer_1.default)({ dest: "uploads/" });
 var Registration = express_1.default.Router();
 var salt = bcrypt_1.default.genSalt(10);
-var defaultImageUrl = "https://firebasestorage.googleapis.com/v0/b/primetech-e8527.appspot.com/o/Deafult%2FUser-Profile-PNG.png?alt=media&token=ecae5a27-2319-473a-bb3e-d4ddb25b4b39";
+var defaultImageUrl = "https://firebasestorage.googleapis.com/v0/b/primetech-e8527.appspot.com/o/Deafult%2Fprofile.png?alt=media&token=01ef3106-a0d2-4443-9371-71ec40e241dd";
 Registration.post("/registration", function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, Name, Email, Bio, Password, socialLinks, Image, UserData, _b, _c, _d, _e, _f, error_1;
     var _g;
@@ -109,7 +108,7 @@ Registration.put("/updateprofile/:userId", upload.single("Image"), function (req
                 parts = originalname.split(".");
                 ext = parts[parts.length - 1];
                 newName = "".concat(Date.now(), ".").concat(ext);
-                file = Firebase_1.default.file("profile/".concat(newName));
+                file = Firebase_1.bucket.file("profile/".concat(newName));
                 writeStream_1 = file.createWriteStream({
                     metadata: { contentType: req.file.mimetype },
                 });
@@ -128,8 +127,8 @@ Registration.put("/updateprofile/:userId", upload.single("Image"), function (req
                 _b.label = 3;
             case 3:
                 token = req.cookies.token;
-                jsonwebtoken_1.default.verify(token, Secret, function (err, decoded) { return __awaiter(void 0, void 0, void 0, function () {
-                    var userId, _a, Name, Bio, Social, decodedToken, info, user, isAuthor, previousImageName, previousImageFile, updatedUser, error_2;
+                jsonwebtoken_1.default.verify(token, process.env.SECRET, function (err, decoded) { return __awaiter(void 0, void 0, void 0, function () {
+                    var userId, _a, Name, Bio, Social, decodedToken, info, user, isAuthor, previousImageName, previousImageFile, exists, updatedUser, error_2;
                     return __generator(this, function (_b) {
                         switch (_b.label) {
                             case 0:
@@ -138,46 +137,51 @@ Registration.put("/updateprofile/:userId", upload.single("Image"), function (req
                                 userId = req.params.userId;
                                 _a = req.body, Name = _a.Name, Bio = _a.Bio, Social = _a.Social;
                                 decodedToken = typeof decoded === "string" ? JSON.parse(decoded) : decoded;
-                                info = decodedToken.user;
+                                info = decodedToken.id;
                                 _b.label = 1;
                             case 1:
-                                _b.trys.push([1, 6, , 7]);
+                                _b.trys.push([1, 7, , 8]);
                                 return [4 /*yield*/, UserModel_1.default.findById(userId)];
                             case 2:
                                 user = _b.sent();
                                 if (!user) {
                                     return [2 /*return*/, res.status(404).json({ message: "User not found" })];
                                 }
-                                isAuthor = JSON.stringify(user._id) === JSON.stringify(info.id);
+                                isAuthor = JSON.stringify(user._id) === JSON.stringify(info);
                                 if (!isAuthor) {
                                     return [2 /*return*/, res.status(400).json("You are not the author of this post")];
                                 }
-                                if (!(user.Image && user.Image !== defaultImageUrl)) return [3 /*break*/, 4];
+                                if (!(user.Image && user.Image !== defaultImageUrl)) return [3 /*break*/, 5];
                                 previousImageName = user.Image.split("/").pop();
-                                previousImageFile = Firebase_1.default.file("profile/".concat(previousImageName));
-                                return [4 /*yield*/, previousImageFile.delete()];
+                                previousImageFile = Firebase_1.bucket.file("profile/".concat(previousImageName));
+                                return [4 /*yield*/, previousImageFile.exists()];
                             case 3:
-                                _b.sent();
-                                _b.label = 4;
+                                exists = _b.sent();
+                                if (!exists) return [3 /*break*/, 5];
+                                return [4 /*yield*/, previousImageFile.delete()];
                             case 4:
+                                _b.sent();
+                                _b.label = 5;
+                            case 5:
                                 // update user data
                                 user.Name = Name || user.Name;
                                 user.Bio = Bio || user.Bio;
                                 user.socialLinks = Social ? JSON.parse(Social) : user.socialLinks;
                                 user.Image = newName
-                                    ? "https://storage.googleapis.com/".concat(Firebase_1.default.name, "/profile/").concat(newName)
+                                    ? "https://storage.googleapis.com/".concat(Firebase_1.bucket.name, "/profile/").concat(newName)
                                     : user.Image;
                                 return [4 /*yield*/, user.save()];
-                            case 5:
+                            case 6:
                                 updatedUser = _b.sent();
                                 res.json(updatedUser);
-                                return [3 /*break*/, 7];
-                            case 6:
+                                return [3 /*break*/, 8];
+                            case 7:
                                 error_2 = _b.sent();
                                 console.log(error_2);
+                                console.log(decodedToken);
                                 res.status(400).json(error_2);
-                                return [3 /*break*/, 7];
-                            case 7: return [2 /*return*/];
+                                return [3 /*break*/, 8];
+                            case 8: return [2 /*return*/];
                         }
                     });
                 }); });

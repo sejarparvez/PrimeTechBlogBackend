@@ -1,4 +1,4 @@
-import mongoose, { Schema, model } from 'mongoose';
+import { model, Schema } from "mongoose";
 
 interface User {
   Name: string;
@@ -29,11 +29,12 @@ const UserSchema = new Schema<User>({
         const emailRegex = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/;
         return emailRegex.test(email);
       },
-      message: (props: { value: any; }) => `${props.value} is not a valid email address`,
+      message: (props: { value: any }) =>
+        `${props.value} is not a valid email address`,
     },
   },
   Image: { type: String },
-  Bio: { type: String, maxlength: 200 },
+  Bio: { type: String, maxlength: 5000 },
   Password: { type: String, minlength: 6 },
   socialLinks: {
     facebook: { type: String },
@@ -46,6 +47,6 @@ const UserSchema = new Schema<User>({
   },
 });
 
-const UserModel = model<User>('User', UserSchema);
+const UserModel = model<User>("User", UserSchema);
 
 export default UserModel;

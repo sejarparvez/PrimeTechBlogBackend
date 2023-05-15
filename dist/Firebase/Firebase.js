@@ -22,21 +22,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.bucket = void 0;
 var admin = __importStar(require("firebase-admin"));
-var ServiceAccountKey_json_1 = __importDefault(require("./ServiceAccountKey.json"));
+var serviceAccount = __importStar(require("./ServiceAccountKey.json"));
 admin.initializeApp({
-    credential: admin.credential.cert(ServiceAccountKey_json_1.default),
+    credential: admin.credential.cert(serviceAccount),
     storageBucket: "primetech-e8527.appspot.com",
 });
-// Create a variable with the correct type
-var storage = admin.storage();
-// Use the storage object to get a reference to the file
-var bucket = storage.bucket("my-bucket");
-var newName = "new-file-name";
-var file = bucket.file(newName);
-exports.default = bucket;
-// Do something with the file object
+var bucket = admin.storage().bucket();
+exports.bucket = bucket;

@@ -50,6 +50,8 @@ Article.get("/post/:id", async (req: Request, res: Response) => {
     "Name",
     "Email",
     "Bio",
+    "Image",
+    "socialLinks",
   ]);
 
   res.json(PostData);
@@ -111,4 +113,4 @@ Article.get(
   }
 );
 
-export default Article
+export default Article;

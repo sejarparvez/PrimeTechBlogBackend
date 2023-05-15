@@ -116,6 +116,8 @@ Article.get("/post/:id", function (req, res) { return __awaiter(void 0, void 0, 
                         "Name",
                         "Email",
                         "Bio",
+                        "Image",
+                        "socialLinks",
                     ])];
             case 1:
                 PostData = _a.sent();
